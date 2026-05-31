@@ -25,7 +25,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -36,10 +36,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     try {
       // Authenticate via our custom layer
-      const user = mockDB.login(username);
+      const user = await mockDB.login(username, password);
       
       // For mock testing, accept password123.
-      if (password !== 'password123') {
+      if (useMockMode() && password !== 'password123') {
         setError('Incorrect password. For mock testing, use "password123".');
         return;
       }

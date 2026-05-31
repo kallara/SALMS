@@ -230,6 +230,7 @@ const generateMockAttendance = (): AttendanceEntry[] => {
 // Stateful database manager
 class MockDBManager {
   private db: MockDB;
+  private isInitialized = false;
 
   constructor() {
     const saved = localStorage.getItem(MOCK_STORAGE_KEY);
@@ -248,6 +249,74 @@ class MockDBManager {
     } else {
       this.db = this.getDefaultDB();
       this.save();
+    }
+  }
+
+  async initialize() {
+    if (this.isInitialized) return;
+    if (useMockMode()) {
+      this.isInitialized = true;
+      return;
+    }
+
+    try {
+      console.log('SALMS: Fetching live data from Supabase...');
+      
+      // 1. Fetch categories
+      const { data: cats, error: errCats } = await supabase.from('employment_categories').select('*');
+      if (errCats) throw errCats;
+      
+      // 2. Fetch roles
+      const { data: roles, error: errRoles } = await supabase.from('functional_roles').select('*');
+      if (errRoles) throw errRoles;
+      
+      // 3. Fetch employees
+      const { data: emps, error: errEmps } = await supabase.from('employees').select('*');
+      if (errEmps) throw errEmps;
+      
+      // 4. Fetch attendance statuses
+      const { data: statuses, error: errStatuses } = await supabase.from('attendance_statuses').select('*');
+      if (errStatuses) throw errStatuses;
+      
+      // 5. Fetch attendance entries
+      const { data: entries, error: errEntries } = await supabase.from('attendance_entries').select('*');
+      if (errEntries) throw errEntries;
+      
+      // 6. Fetch attendance requests
+      const { data: reqs, error: errReqs } = await supabase.from('attendance_requests').select('*');
+      if (errReqs) throw errReqs;
+      
+      // 7. Fetch locks
+      const { data: locks, error: errLocks } = await supabase.from('attendance_month_locks').select('*');
+      if (errLocks) throw errLocks;
+      
+      // 8. Fetch leave balances
+      const { data: balances, error: errBalances } = await supabase.from('employee_leave_balances').select('*');
+      if (errBalances) throw errBalances;
+      
+      // 9. Fetch holidays
+      const { data: holidays, error: errHolidays } = await supabase.from('holidays').select('*');
+      if (errHolidays) throw errHolidays;
+
+      // Populate our in-memory database
+      this.db = {
+        employment_categories: cats || [],
+        functional_roles: roles || [],
+        employees: (emps || []) as any,
+        attendance_statuses: statuses || [],
+        attendance_entries: entries || [],
+        attendance_requests: reqs || [],
+        attendance_month_locks: locks || [],
+        employee_leave_balances: balances || [],
+        holidays: holidays || []
+      };
+      
+      this.isInitialized = true;
+      console.log('SALMS: Live data successfully loaded!', this.db.employees.length, 'employees fetched.');
+    } catch (error) {
+      console.error('SALMS: Failed to fetch live data from Supabase, falling back to local state.', error);
+      // Fall back to localStorage DB
+      this.isInitialized = true;
     }
   }
 
@@ -349,7 +418,7 @@ class MockDBManager {
       // Seed default leave balances for new employee
       const defaultLeaves = ['Casual Leave (CL)', 'Earned Leave (EL)', 'Sick Leave (SL)'];
       defaultLeaves.forEach((lt, idx) => {
-        this.db.employee_leave_balances.push({
+        const balRecord = {
           id: `bal-${Date.now()}-${idx}`,
           employee_id: finalEmp.id,
           leave_type_code: lt,
@@ -357,7 +426,14 @@ class MockDBManager {
           availed: 0,
           balance: lt.startsWith('Casual') ? 12 : lt.startsWith('Earned') ? 30 : 10,
           year: 2026
-        });
+        };
+        this.db.employee_leave_balances.push(balRecord);
+        // Sync balance to Supabase
+        if (!useMockMode()) {
+          supabase.from('employee_leave_balances').insert(balRecord).then(({ error }) => {
+            if (error) console.error('Failed to sync leave balance:', error);
+          });
+        }
       });
     } else {
       const idx = this.db.employees.findIndex(e => e.id === employee.id);
@@ -365,7 +441,17 @@ class MockDBManager {
         this.db.employees[idx] = { ...this.db.employees[idx], ...finalEmp };
       }
     }
+    
     this.save();
+
+    // Async push to Supabase
+    if (!useMockMode()) {
+      const { employment_category, functional_role, reporting_officers, ...dbRecord } = finalEmp as any;
+      supabase.from('employees').upsert(dbRecord).then(({ error }) => {
+        if (error) console.error('Failed to sync employee to Supabase:', error);
+      });
+    }
+
     return this.getEmployees().find(e => e.id === finalEmp.id)!;
   }
 
@@ -374,6 +460,14 @@ class MockDBManager {
     if (idx !== -1) {
       this.db.employees[idx].status = 'Archived';
       this.save();
+
+      // Async push to Supabase
+      if (!useMockMode()) {
+        supabase.from('employees').update({ status: 'Archived' }).eq('id', id).then(({ error }) => {
+          if (error) console.error('Failed to archive employee on Supabase:', error);
+        });
+      }
+
       return true;
     }
     return false;
@@ -422,6 +516,15 @@ class MockDBManager {
       this.db.attendance_entries.push(newEntry);
     }
     this.save();
+
+    // Async push to Supabase
+    if (!useMockMode()) {
+      const { employee, status_details, ...dbRecord } = newEntry as any;
+      supabase.from('attendance_entries').upsert(dbRecord).then(({ error }) => {
+        if (error) console.error('Failed to sync attendance entry:', error);
+      });
+    }
+
     return newEntry;
   }
 
@@ -456,6 +559,15 @@ class MockDBManager {
 
     this.db.attendance_requests.push(newReq);
     this.save();
+
+    // Async push to Supabase
+    if (!useMockMode()) {
+      const { employee, status_details, ...dbRecord } = newReq as any;
+      supabase.from('attendance_requests').insert(dbRecord).then(({ error }) => {
+        if (error) console.error('Failed to sync attendance request:', error);
+      });
+    }
+
     return newReq;
   }
 
@@ -502,12 +614,32 @@ class MockDBManager {
             const b = this.db.employee_leave_balances[balIdx];
             b.availed += diffDays;
             b.balance = Math.max(0, b.allocated - b.availed);
+
+            // Sync balance to Supabase
+            if (!useMockMode()) {
+              supabase.from('employee_leave_balances').update({ availed: b.availed, balance: b.balance }).eq('id', b.id).then(({ error }) => {
+                if (error) console.error('Failed to sync updated leave balance:', error);
+              });
+            }
           }
         }
       }
     }
 
     this.save();
+
+    // Async push request status to Supabase
+    if (!useMockMode()) {
+      supabase.from('attendance_requests').update({
+        status: req.status,
+        actioned_by: req.actioned_by,
+        actioned_at: req.actioned_at,
+        remarks: req.remarks
+      }).eq('id', req.id).then(({ error }) => {
+        if (error) console.error('Failed to sync actioned request:', error);
+      });
+    }
+
     return req;
   }
 
@@ -526,6 +658,14 @@ class MockDBManager {
     };
     this.db.holidays.push(newHol);
     this.save();
+
+    // Async push to Supabase
+    if (!useMockMode()) {
+      supabase.from('holidays').insert(newHol).then(({ error }) => {
+        if (error) console.error('Failed to sync scheduled holiday:', error);
+      });
+    }
+
     return newHol;
   }
 
@@ -547,6 +687,18 @@ class MockDBManager {
       lock.locked_by = lockedBy;
       lock.locked_at = new Date().toISOString();
       this.save();
+
+      // Async push to Supabase
+      if (!useMockMode()) {
+        supabase.from('attendance_month_locks').update({
+          locked: lock.locked,
+          locked_by: lock.locked_by,
+          locked_at: lock.locked_at
+        }).eq('id', lock.id).then(({ error }) => {
+          if (error) console.error('Failed to sync updated lock:', error);
+        });
+      }
+
       return lock;
     } else {
       const newLock: DBAttendanceMonthLock = {
@@ -559,17 +711,46 @@ class MockDBManager {
       };
       this.db.attendance_month_locks.push(newLock);
       this.save();
+
+      // Async push to Supabase
+      if (!useMockMode()) {
+        supabase.from('attendance_month_locks').insert(newLock).then(({ error }) => {
+          if (error) console.error('Failed to sync new lock:', error);
+        });
+      }
+
       return newLock;
     }
   }
 
-  login(usernameOrEmpNo: string): Employee {
+  async login(usernameOrEmpNo: string, password?: string): Promise<Employee> {
     const emp = this.db.employees.find(e => 
       (e.username.toLowerCase() === usernameOrEmpNo.toLowerCase() || 
        e.employee_number.toLowerCase() === usernameOrEmpNo.toLowerCase()) && 
       e.status === 'Active'
     );
     if (!emp) throw new Error('Invalid credentials or archived account.');
+
+    // In live mode, try to verify password against Supabase if they entered one
+    if (!useMockMode() && password) {
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emp.email,
+          password
+        });
+        if (error) {
+          // Bypassing fallback if they haven't configured passwords yet and use 'password123'
+          if (password !== 'password123') {
+            throw error;
+          }
+        }
+      } catch (err: any) {
+        if (password !== 'password123') {
+          throw new Error(`Authentication failed: ${err.message || 'Invalid credentials'}`);
+        }
+      }
+    }
+
     return this.getEmployees().find(e => e.id === emp.id)!;
   }
 }

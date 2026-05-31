@@ -11,28 +11,44 @@ import { HolidayManagement } from './pages/HolidayManagement';
 import { Reports } from './pages/Reports';
 import { Layout } from './components/Layout';
 import { Employee } from './types/database.types';
+import { mockDB } from './services/supabase';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = React.useState<Employee | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const savedUser = localStorage.getItem('salms_current_user');
-    if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        // Self-healing: clear the session if the cached user is from the old HRM schema
-        if (!parsed || !parsed.date_of_birth) {
-          throw new Error('Stale user session');
+    const initApp = async () => {
+      // Fetch live data if not in mock mode before setting loading to false
+      await mockDB.initialize();
+
+      const savedUser = localStorage.getItem('salms_current_user');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (!parsed || !parsed.date_of_birth) {
+            throw new Error('Stale user session');
+          }
+          // Refresh user data from live database if available
+          try {
+            const freshUser = mockDB.getEmployees().find(e => e.id === parsed.id);
+            if (freshUser) {
+              setCurrentUser(freshUser);
+            } else {
+              setCurrentUser(parsed);
+            }
+          } catch (err) {
+            setCurrentUser(parsed);
+          }
+        } catch (e) {
+          console.warn('Clearing stale user session cache.');
+          localStorage.removeItem('salms_current_user');
+          setCurrentUser(null);
         }
-        setCurrentUser(parsed);
-      } catch (e) {
-        console.warn('Clearing stale user session cache.');
-        localStorage.removeItem('salms_current_user');
-        setCurrentUser(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+    initApp();
   }, []);
 
   const handleLoginSuccess = (user: Employee) => {
