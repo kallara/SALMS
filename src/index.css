@@ -1,0 +1,65 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 font-sans antialiased selection:bg-gov-gold/30 selection:text-gov-navy-dark;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight text-gov-navy font-bold;
+  }
+}
+
+@layer components {
+  .gov-card {
+    @apply bg-white rounded-xl border border-slate-200/80 shadow-premium transition-all duration-300 hover:shadow-lg hover:border-slate-300/50;
+  }
+
+  .gov-header {
+    @apply bg-gov-navy text-white border-b-4 border-gov-gold relative overflow-hidden;
+  }
+
+  .gov-btn-primary {
+    @apply bg-gov-navy text-white border border-gov-navy hover:bg-gov-navy-light hover:border-gov-navy-light px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gov-navy/20;
+  }
+
+  .gov-btn-secondary {
+    @apply bg-white text-gov-navy border border-slate-300 hover:bg-slate-50 hover:border-slate-400 px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200;
+  }
+
+  .gov-btn-gold {
+    @apply bg-gov-gold text-gov-navy-dark border border-gov-gold hover:bg-gov-gold-light hover:border-gov-gold-light px-4 py-2 rounded-lg font-bold transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gov-gold/20 shadow-gold-glow/20;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border;
+  }
+
+  /* Calendar day highlights */
+  .cal-status-P { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
+  .cal-status-LEAVE { @apply bg-amber-50 text-amber-700 border-amber-200; }
+  .cal-status-OD { @apply bg-blue-50 text-blue-700 border-blue-200; }
+  .cal-status-TR { @apply bg-teal-50 text-teal-700 border-teal-200; }
+  .cal-status-TO { @apply bg-cyan-50 text-cyan-700 border-cyan-200; }
+  .cal-status-CO { @apply bg-violet-50 text-violet-700 border-violet-200; }
+  .cal-status-WO { @apply bg-gray-100 text-gray-600 border-gray-200; }
+  .cal-status-H { @apply bg-indigo-50 text-indigo-700 border-indigo-200; }
+  .cal-status-A { @apply bg-red-50 text-red-700 border-red-200; }
+  .cal-status-FH { @apply bg-orange-50 text-orange-700 border-orange-200; }
+  .cal-status-SH { @apply bg-sky-50 text-sky-700 border-sky-200; }
+}
+
+/* Custom Calendar Transitions & Micro-animations */
+.transition-transform-quick {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
