@@ -236,8 +236,14 @@ class MockDBManager {
     if (saved) {
       try {
         this.db = JSON.parse(saved);
+        // Self-healing check: verify if the parsed database matches our new custom schema
+        if (!this.db.employment_categories || !this.db.employees || !this.db.employees[0]?.date_of_birth) {
+          throw new Error('Stale schema detected');
+        }
       } catch (e) {
+        console.warn('Wiping stale database cache from localStorage. Initializing new SALMS schema.');
         this.db = this.getDefaultDB();
+        this.save();
       }
     } else {
       this.db = this.getDefaultDB();

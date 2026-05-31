@@ -20,9 +20,16 @@ export const App: React.FC = () => {
     const savedUser = localStorage.getItem('salms_current_user');
     if (savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        // Self-healing: clear the session if the cached user is from the old HRM schema
+        if (!parsed || !parsed.date_of_birth) {
+          throw new Error('Stale user session');
+        }
+        setCurrentUser(parsed);
       } catch (e) {
+        console.warn('Clearing stale user session cache.');
         localStorage.removeItem('salms_current_user');
+        setCurrentUser(null);
       }
     }
     setLoading(false);
