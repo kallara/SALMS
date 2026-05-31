@@ -41,7 +41,7 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
 
           <p className="text-sm font-medium text-slate-500 flex items-center justify-center md:justify-start">
             <Hash size={14} className="mr-1 text-slate-400" />
-            Employee ID: <strong className="ml-1 text-slate-700">{profileUser.employee_number}</strong>
+            Employee ID: <strong className="ml-1 text-slate-700">{profileUser.employee_no}</strong>
           </p>
 
           {/* Tab Navigation */}

@@ -190,7 +190,7 @@ export const Reports: React.FC = () => {
                         <td className="py-3.5">
                           <div>
                             <h5 className="font-extrabold text-gov-navy">{emp.full_name}</h5>
-                            <span className="text-[10px] text-slate-400">ID: {emp.employee_number}</span>
+                            <span className="text-[10px] text-slate-400">ID: {emp.employee_no}</span>
                           </div>
                         </td>
                         <td className="py-3.5 text-slate-800 font-semibold">{emp.functional_role?.name}</td>
@@ -244,7 +244,7 @@ export const Reports: React.FC = () => {
                         <td className="py-3.5">
                           <div>
                             <h5 className="font-extrabold text-gov-navy">{emp.full_name}</h5>
-                            <span className="text-[10px] text-slate-400">ID: {emp.employee_number}</span>
+                            <span className="text-[10px] text-slate-400">ID: {emp.employee_no}</span>
                           </div>
                         </td>
                         <td className="py-3.5 text-slate-500">{emp.employment_category?.name || 'Permanent'}</td>
@@ -299,7 +299,7 @@ export const Reports: React.FC = () => {
                           <td className="py-3.5">
                             <div>
                               <h5 className="font-extrabold text-gov-navy">{emp.full_name}</h5>
-                              <span className="text-[10px] text-slate-400">ID: {emp.employee_number}</span>
+                              <span className="text-[10px] text-slate-400">ID: {emp.employee_no}</span>
                             </div>
                           </td>
                           <td className="py-3.5 text-slate-800 font-semibold">{emp.functional_role?.name}</td>

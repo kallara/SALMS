@@ -49,7 +49,7 @@ export interface Database {
         Row: {
           id: string
           auth_user_id: string | null
-          employee_number: string
+          employee_no: string
           username: string
           full_name: string
           email: string
@@ -66,7 +66,7 @@ export interface Database {
         Insert: {
           id?: string
           auth_user_id?: string | null
-          employee_number: string
+          employee_no: string
           username: string
           full_name: string
           email: string
@@ -83,7 +83,7 @@ export interface Database {
         Update: {
           id?: string
           auth_user_id?: string | null
-          employee_number?: string
+          employee_no?: string
           username?: string
           full_name?: string
           email?: string

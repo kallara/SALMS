@@ -63,7 +63,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
   {
     id: 'emp-1',
     auth_user_id: 'auth-root',
-    employee_number: 'EMP001',
+    employee_no: 'EMP001',
     username: 'rootadmin',
     full_name: 'Dr. Ramesh Chandra (Director)',
     email: 'ramesh.director@gov.in',
@@ -80,7 +80,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
   {
     id: 'emp-2',
     auth_user_id: 'auth-admin',
-    employee_number: 'EMP002',
+    employee_no: 'EMP002',
     username: 'admin',
     full_name: 'Smt. Swathi Sharma (Section Officer)',
     email: 'swathi.so@gov.in',
@@ -97,7 +97,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
   {
     id: 'emp-3',
     auth_user_id: 'auth-dw',
-    employee_number: 'EMP003',
+    employee_no: 'EMP003',
     username: 'emp_dw',
     full_name: 'Shri Amit Kumar (Daily Wage Assistant)',
     email: 'amit.dw@gov.in',
@@ -114,7 +114,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
   {
     id: 'emp-4',
     auth_user_id: 'auth-perm',
-    employee_number: 'EMP004',
+    employee_no: 'EMP004',
     username: 'emp_perm',
     full_name: 'Shri Rajesh Prasad (Technical Officer)',
     email: 'rajesh.to@gov.in',
@@ -724,11 +724,14 @@ class MockDBManager {
   }
 
   async login(usernameOrEmpNo: string, password?: string): Promise<Employee> {
-    const emp = this.db.employees.find(e => 
-      (e.username.toLowerCase() === usernameOrEmpNo.toLowerCase() || 
-       e.employee_number.toLowerCase() === usernameOrEmpNo.toLowerCase()) && 
-      e.status === 'Active'
-    );
+    const emp = this.db.employees.find(e => {
+      const u = e.username ? e.username.toLowerCase() : '';
+      const en = e.employee_no ? e.employee_no.toLowerCase() : '';
+      const em = e.email ? e.email.toLowerCase() : '';
+      const input = usernameOrEmpNo.toLowerCase();
+      
+      return (u === input || en === input || em === input) && e.status === 'Active';
+    });
     if (!emp) throw new Error('Invalid credentials or archived account.');
 
     // In live mode, try to verify password against Supabase if they entered one

@@ -57,7 +57,7 @@ export const EmployeeManagement: React.FC = () => {
     setFullName(emp.full_name);
     setUsername(emp.username);
     setEmail(emp.email);
-    setEmpNo(emp.employee_number);
+    setEmpNo(emp.employee_no);
     setDob(emp.date_of_birth || '');
     setRoleSelection(emp.role);
     setCatId(emp.category_id);
@@ -125,7 +125,7 @@ export const EmployeeManagement: React.FC = () => {
         full_name: fullName,
         username,
         email,
-        employee_number: empNo,
+        employee_no: empNo,
         date_of_birth: dob || null,
         role: roleSelection,
         category_id: catId,
@@ -147,7 +147,7 @@ export const EmployeeManagement: React.FC = () => {
   // Filter employees
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = emp.full_name.toLowerCase().includes(search.toLowerCase()) || 
-                          emp.employee_number.toLowerCase().includes(search.toLowerCase());
+                          emp.employee_no.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = categoryFilter ? emp.category_id === categoryFilter : true;
     return matchesSearch && matchesCategory;
   });
@@ -224,7 +224,7 @@ export const EmployeeManagement: React.FC = () => {
                         </div>
                         <div>
                           <h5 className="text-xs font-extrabold text-gov-navy">{emp.full_name}</h5>
-                          <span className="text-[10px] text-slate-400 block mt-0.5">ID: {emp.employee_number}</span>
+                          <span className="text-[10px] text-slate-400 block mt-0.5">ID: {emp.employee_no}</span>
                         </div>
                       </div>
                     </td>
