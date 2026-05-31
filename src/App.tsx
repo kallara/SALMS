@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
@@ -50,7 +50,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Unprotected Login Route */}
         <Route 
@@ -93,7 +93,7 @@ export const App: React.FC = () => {
           } 
         />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
